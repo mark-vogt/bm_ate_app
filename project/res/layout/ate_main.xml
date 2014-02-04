@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/GridLayout1"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="#00ADEF"
+    android:columnCount="7"
+    android:orientation="horizontal"
+    android:padding="50dp" >
+
+    <ImageView
+        android:id="@+id/imageViewProgram"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_column="1"
+        android:layout_gravity="left|top"
+        android:layout_row="3"
+        android:padding="10dp"
+        android:src="@drawable/ic_launcher" />
+
+    <ImageView
+        android:id="@+id/imageViewFinal"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_column="2"
+        android:layout_gravity="left|top"
+        android:layout_row="3"
+        android:padding="10dp"
+        android:src="@drawable/ic_blumoo" />
+
+    <ImageView
+        android:id="@+id/imageViewSettings"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_column="3"
+        android:layout_gravity="left|top"
+        android:layout_row="3"
+        android:padding="10dp"
+        android:src="@drawable/ic_settings" />
+
+</GridLayout>
