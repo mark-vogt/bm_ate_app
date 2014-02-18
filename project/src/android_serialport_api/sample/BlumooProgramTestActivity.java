@@ -297,8 +297,11 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 	private void ate_start() {
 		if(ate_running != true)
 		{
-			my_esn = Integer.parseInt(edittext.getText().toString());			
-			ate_state_machine();			
+			if( edittext.getText().length() >= 1)
+			{
+				my_esn = Integer.parseInt(edittext.getText().toString());			
+				ate_state_machine();
+			}
 		}
 	}
 
