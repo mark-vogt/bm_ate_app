@@ -11,11 +11,6 @@
         <activity
             android:label="@string/app_name"
             android:name="MainMenu" >
-            <intent-filter >
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
         <activity android:name="SerialPortPreferences" >
         </activity>
@@ -27,7 +22,14 @@
         <activity android:name="IopActivity" >
         </activity>
         <activity android:name="BlumooProgramTestActivity"></activity>
-        <activity android:screenOrientation="landscape" android:name="AteMain"></activity>
+        <activity android:screenOrientation="landscape" android:name="AteMain">
+            <intent-filter >
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name="BlumooFinalTestActivity"></activity>
     </application>
 
     <uses-sdk android:minSdkVersion="14" />

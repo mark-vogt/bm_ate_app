@@ -24,9 +24,8 @@ import android_serialport_api.Iop;
 import android_serialport_api.IopCallbacks;
 
 
-
-
 public class BlumooProgramTestActivity extends SerialPortActivity implements IopCallbacks {
+
 
 	public enum ATE_STATE {
 		ATE_STATE_IDLE,
@@ -34,13 +33,20 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 		ATE_STATE_MAC,
 		ATE_STATE_ESN,
 		ATE_STATE_ESN_REBOOT,
-		ATE_STATE_LED_RED,
-		ATE_STATE_LED_GREEN,
-		ATE_STATE_LED_BLUE,
-		ATE_STATE_LED_IR,
+		ATE_STATE_VERIFY_MAC,
+		ATE_STATE_VERIFY_ESN,
 		ATE_STATE_AUDIO,
-		ATE_STATE_BLUETOOTH
+		ATE_STATE_LED_IR,
+		
+		ATE_STATE_BLUETOOTH,
+
+		ATE_STATE_LED_RGB,
+		ATE_STATE_FT_IR,		/* Final test for IR exteneded	*/
 	}
+
+	//Constants
+	private static final int DEFAULT_TIMEOUT = 2000;	/* millseconds	*/
+	private static final int BT_TEST_TIMEOUT = 10000;	/* millseconds	*/
 	
 	//variables
 	private InputStream input;
@@ -49,6 +55,7 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 	private boolean ate_running;
 	private boolean dut_communication;
 	private int my_esn;
+	private byte[]	my_bt_mac = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 	private ATE_STATE my_ate_state;
 	private Timer ate_timer;
 	private Iop myIop;
@@ -59,7 +66,7 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.blumoo_program_test);
-		input = getResources().openRawResource(R.raw.combined_sw_106);
+		input = getResources().openRawResource(R.raw.combined_sw_bl_106_app_109);
 		program_status_counter = 0;
 		my_esn = 0;
 		ate_running = false;
@@ -68,7 +75,7 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 		myIop = new Iop(this);
 				
 		mReception = (EditText) findViewById(R.id.editTextBlumooAteStatus);
-		
+			
 	    final Button buttonBlumooAteStart = (Button)findViewById(R.id.buttonBlumooAteStart);
 	    buttonBlumooAteStart.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
@@ -125,12 +132,12 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 							mOutputStream.write(file_buffer);
 							program_status_counter ++;
 							mReception.setText(Integer.toString(program_status_counter*100/256) + "%  固件  Programming" );
-							try {
-								Thread.sleep(100);
-							} catch (InterruptedException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
+//							try {
+//								Thread.sleep(100);
+//							} catch (InterruptedException e) {
+//								// TODO Auto-generated catch block
+//								e.printStackTrace();
+//							}
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
@@ -144,8 +151,30 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 							case 'p':
 								ate_state_machine();
 								break;
+								
 							case 'd':
 								break;
+								
+							case 'a':
+								ate_state_machine();
+								break;
+								
+							case 'c':
+								ate_state_machine();
+								break;
+								
+							case 'i':
+								ate_state_machine();
+								break;
+								
+							case 'r':
+								ate_state_machine();
+								break;
+								
+							case 'b':
+								ate_state_machine();
+								break;
+								
 							default:
 								break;
 						};					
@@ -171,9 +200,24 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 		}
 		my_ate_state = ATE_STATE.ATE_STATE_IDLE;
 		edittext.selectAll();
-		edittext.requestFocus();	
+		edittext.requestFocus();
+		
+		this.reset_ate();
+		try {
+		    Thread.sleep(200);
+		} catch(InterruptedException ex) {
+		    Thread.currentThread().interrupt();
+		}
+		
 		ate_running = false;
 		dut_communication = false;
+		
+		my_esn = 0;
+		for( int i = 0; i < my_bt_mac.length; i++ )
+		{
+			my_bt_mac[i] = 0;
+		}
+		
 		Iop.reset();
 	}
 	
@@ -190,24 +234,26 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 			break;
 		case ATE_STATE_PROGRAM:
 			try {
-				mOutputStream.write((byte)'p'); 	//p
-				input.reset(); 				//seek to beginning of file
-				mReception.setText("Started...");		//Reset status window
+				input.reset(); 						//seek to beginning of file
 				mReception.setTextColor(Color.WHITE);
 				mReception.setBackgroundColor(Color.TRANSPARENT);
+				mReception.setText("Started...");	//Reset status window
 				mReception.setTextSize(25);
 				program_status_counter = 0;
 				ate_running = true;
 				dut_communication = false;
+				
+				mOutputStream.write((byte)'p'); 	//p
+
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}	
 			break;
 		case ATE_STATE_MAC:	
-			//mReception.setText("Programming Compete!");
+			mReception.setText("Programming Compete!");
 			try {
-			    Thread.sleep(3000);
+			    Thread.sleep(2000);
 			} catch(InterruptedException ex) {
 			    Thread.currentThread().interrupt();
 			}
@@ -218,10 +264,13 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 			bt_address[0] = (byte) (bt_address_low >> 0);
 			bt_address[1] = (byte) (bt_address_low >> 8);
 			bt_address[2] = (byte) (bt_address_low >> 16);			
-
+			
+//			my_bt_mac = bt_address;
+			System.arraycopy( bt_address, 0, my_bt_mac, 0, bt_address.length );
+			
 			mReception.append("\n设置MAC地址  Setting MAC");
 			ate_timer = new Timer();
-			ate_timer.schedule(new TimeoutTask(), 2000);
+			ate_timer.schedule(new TimeoutTask(), DEFAULT_TIMEOUT);
 			Iop.sendInst(Iop.IOP_INST_ID.IOP_BT_ADDR_DATA, bt_address, 8);
 			break;
 		case ATE_STATE_ESN:
@@ -240,9 +289,10 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 			mReception.append("\n编号  ESN = ");
 			mReception.append(Integer.toString(my_esn));
 			ate_timer = new Timer();
-			ate_timer.schedule(new TimeoutTask(), 2000);
+			ate_timer.schedule(new TimeoutTask(), DEFAULT_TIMEOUT);
 			Iop.sendInst(Iop.IOP_INST_ID.IOP_ESN_DATA, esn_bytes, 4);
 			break;
+			
 		case ATE_STATE_ESN_REBOOT:
 			mReception.append("\n重启  Reboot");
 			try {
@@ -252,34 +302,122 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}	
+			break;
 			
+		case ATE_STATE_VERIFY_MAC:
 			try {
 			    Thread.sleep(2000);
 			} catch(InterruptedException ex) {
 			    Thread.currentThread().interrupt();
 			}
-			//break;
-		case ATE_STATE_LED_RED:
+			
+			dut_communication = true;
+			byte[] mac_cmd_id = new byte[2];
+			/*
+			esn_bytes[0] = (byte) (Iop.IOP_CMND_MSG.IOP_BT_DOWNLOAD_BT_ADDR.);
+			esn_bytes[1] = (byte) (Iop.IOP_CMND_MSG.IOP_BT_DOWNLOAD_BT_ADDR >> 8);
+			*/
+			mac_cmd_id[0] = (byte) 1;
+			mac_cmd_id[1] = (byte) 0;
+			mReception.append("\nVerifying MAC");
+			ate_timer = new Timer();
+			ate_timer.schedule(new TimeoutTask(), DEFAULT_TIMEOUT);
+			Iop.sendInst(Iop.IOP_INST_ID.IOP_CMND_ID, mac_cmd_id, 2);
+			break;
+			
+		case ATE_STATE_VERIFY_ESN:
+			try {
+			    Thread.sleep(200);
+			} catch(InterruptedException ex) {
+			    Thread.currentThread().interrupt();
+			}
+			
+			dut_communication = true;
+			byte[] esn_cmd_id = new byte[2];
+			/*
+			esn_bytes[0] = (byte) (Iop.IOP_CMND_MSG.IOP_DOWNLOAD_ESN.);
+			esn_bytes[1] = (byte) (Iop.IOP_CMND_MSG.IOP_DOWNLOAD_ESN >> 8);
+			*/
+			esn_cmd_id[0] = (byte) 0;
+			esn_cmd_id[1] = (byte) 0;
+			mReception.append("\nVerifying ESN");
+			ate_timer = new Timer();
+			ate_timer.schedule(new TimeoutTask(), DEFAULT_TIMEOUT);
+			Iop.sendInst(Iop.IOP_INST_ID.IOP_CMND_ID, esn_cmd_id, 2);
+			break;
+			
+		case ATE_STATE_AUDIO:
+			
+			try {
+			    Thread.sleep(200);
+			} catch(InterruptedException ex) {
+			    Thread.currentThread().interrupt();
+			}
+			
+			dut_communication = false;
+			mReception.append("\nPerforming Audio Test");
+			
+			ate_timer = new Timer();
+			ate_timer.schedule(new TimeoutTask(), DEFAULT_TIMEOUT);
+			
+			try {		
+				mOutputStream.write((byte)'a');		//a
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} 
+			break;
+			
+		case ATE_STATE_LED_IR:
+			dut_communication = false;
+			mReception.append("\nPerforming IR LED Test");
+			
+			ate_timer = new Timer();
+			ate_timer.schedule(new TimeoutTask(), DEFAULT_TIMEOUT);
+			
+			try {
+				mOutputStream.write((byte)'i'); //i
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}		
+			break;
+
+		case ATE_STATE_LED_RGB:
 			ate_state_machine_reset(true);			
 			break;
-		case ATE_STATE_LED_GREEN:
+					
+		case ATE_STATE_FT_IR:
+			dut_communication = false;
+			mReception.append("\nPerforming FT IR LED Test");
+			try {
+				mOutputStream.write((byte)'f'); //f
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}	
 			break;
-		case ATE_STATE_LED_BLUE:
-			break;
-		case ATE_STATE_LED_IR:
-			break;
-		case ATE_STATE_AUDIO:
-			break;
+			
 		case ATE_STATE_BLUETOOTH:
+			dut_communication = false;
+			mReception.append("\nPerforming Bluetooth Test");
+			
+			ate_timer = new Timer();
+			ate_timer.schedule(new TimeoutTask(), BT_TEST_TIMEOUT);
+			
+			try {
+				mOutputStream.write((byte)'b'); //b
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}	
 			break;
 		default:
 			my_ate_state = ATE_STATE.ATE_STATE_IDLE;
-			break;
-			
+			break;	
 		}
-
-	
 	}
+	
 	private Handler TimeoutHandler = new Handler() {
 	    public void handleMessage(Message msg) {
 	    	ate_state_machine_reset(false);
@@ -308,15 +446,40 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 	@Override
 	public void iopMsgHandler(int inst, byte[] data, int size) {
 		byte[] product_data = {66, 108, 117, 109, 111, 111, 32, 65, 84, 69, 32, 118, 48, 46, 49};//"Blumoo ATE tester v0.1";
+		int i;
 		
-		if(inst == Iop.IOP_INST_ID.PROD_RQST.ordinal()) {
+		if(inst == Iop.IOP_INST_ID.PROD_RQST.ordinal()) 
+		{
 			mReception.append("\tProduct Request\n");
 			Iop.sendInst(Iop.IOP_INST_ID.PROD_RQST_DATA, product_data, product_data.length);
 		}
-		else if(inst == Iop.IOP_INST_ID.PROD_RQST_DATA.ordinal()) {
+		else if(inst == Iop.IOP_INST_ID.PROD_RQST_DATA.ordinal()) 
+		{
 			mReception.append("\tProduct Request Data\n\t");
 			mReception.append(new String(data));
 			mReception.append("\n");
+		}
+		else if(inst == Iop.IOP_INST_ID.IOP_BT_ADDR_DATA.ordinal())
+		{		
+			for( i = 0; i < my_bt_mac.length; i++ )
+			{
+				if( data[i] != my_bt_mac[i] )
+				{
+					ate_state_machine_reset(false);
+				}
+			}
+			ate_state_machine();
+		}
+		else if(inst == Iop.IOP_INST_ID.IOP_ESN_DATA.ordinal() )
+		{
+			int	esn = ((data[3] & 0xff) << 24) | ((data[2] & 0xff) << 16) | ((data[1] & 0xff) << 8)  | (data[0] & 0xff);
+			
+			if( esn != my_esn )
+			{
+				ate_state_machine_reset(false);				
+			}
+			
+			ate_state_machine();
 		}
 		
 	}
@@ -331,9 +494,7 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 		case ATE_STATE_AUDIO:
 		case ATE_STATE_BLUETOOTH:
 		case ATE_STATE_ESN_REBOOT:
-		case ATE_STATE_LED_RED:
-		case ATE_STATE_LED_GREEN:
-		case ATE_STATE_LED_BLUE:
+		case ATE_STATE_LED_RGB:
 		default:
 			//ignore
 			break;
@@ -352,12 +513,5 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 		
 	}
 	
-	
 
-
-	
-	
-	
-
-	
 }

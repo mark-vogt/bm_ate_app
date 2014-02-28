@@ -104,5 +104,9 @@ public abstract class SerialPortActivity extends Activity {
 		super.onDestroy();
 	}
 	
+	
+	public void reset_ate() {
+		mSerialPort.reset();
+	}
 
 }

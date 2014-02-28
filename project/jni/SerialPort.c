@@ -22,6 +22,11 @@
 #include <string.h>
 #include <jni.h>
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <poll.h>
+
 #include "SerialPort.h"
 
 #include "android/log.h"
@@ -163,5 +168,205 @@ JNIEXPORT void JNICALL Java_android_1serialport_1api_SerialPort_close
 
 	LOGD("close(fd = %d)", descriptor);
 	close(descriptor);
+}
+
+#define SYSFS_GPIO_DIR "/sys/class/gpio"
+#define MAX_BUF 		( 64 )
+
+enum {
+	INPUT_PIN=0,
+	OUTPUT_PIN=1
+};
+
+enum {
+	LOW=0,
+	HIGH=1
+};
+
+/****************************************************************
+ * gpio_export
+ ****************************************************************/
+static int gpio_export(unsigned int gpio)
+{
+	int fd, len;
+	char buf[MAX_BUF];
+
+	fd = open(SYSFS_GPIO_DIR "/export", O_WRONLY);
+	if (fd < 0) {
+		LOGE("gpio/export error = %d: path = %s", fd, buf );
+		return fd;
+	}
+
+	len = snprintf(buf, sizeof(buf), "%d", gpio);
+	write(fd, buf, len);
+	close(fd);
+
+	return 0;
+}
+
+/****************************************************************
+ * gpio_unexport
+ ****************************************************************/
+static int gpio_unexport(unsigned int gpio)
+{
+	int fd, len;
+	char buf[MAX_BUF];
+
+	fd = open(SYSFS_GPIO_DIR "/unexport", O_WRONLY);
+	if (fd < 0) {
+		LOGE("gpio/export error = %d: path = %s", fd, buf );
+		return fd;
+	}
+
+	len = snprintf(buf, sizeof(buf), "%d", gpio);
+	write(fd, buf, len);
+	close(fd);
+	return 0;
+}
+
+/****************************************************************
+ * gpio_set_dir
+ ****************************************************************/
+static int gpio_set_dir(unsigned int gpio, unsigned int out_flag)
+{
+	int fd;
+	char buf[MAX_BUF];
+
+	snprintf(buf, sizeof(buf), SYSFS_GPIO_DIR  "/gpio%d/direction", gpio);
+
+	fd = open(buf, O_WRONLY);
+	if (fd < 0) {
+		LOGE("gpio/direction error = %d: path = %s", fd, buf );
+		return fd;
+	}
+
+	if (out_flag == OUTPUT_PIN)
+		write(fd, "out", 4);
+	else
+		write(fd, "in", 3);
+
+	close(fd);
+	return 0;
+}
+
+/****************************************************************
+ * gpio_set_value
+ ****************************************************************/
+static int gpio_set_value(unsigned int gpio, unsigned int value)
+{
+	int fd;
+	char buf[MAX_BUF];
+
+	snprintf(buf, sizeof(buf), SYSFS_GPIO_DIR "/gpio%d/value", gpio);
+
+	fd = open(buf, O_WRONLY);
+	if (fd < 0) {
+		LOGE("gpio/set-value error = %d: path = %s", fd, buf );
+		return fd;
+	}
+
+	if (value==LOW)
+		write(fd, "0", 2);
+	else
+		write(fd, "1", 2);
+
+	close(fd);
+	return 0;
+}
+
+/****************************************************************
+ * gpio_get_value
+ ****************************************************************/
+static int gpio_get_value(unsigned int gpio, unsigned int *value)
+{
+	int fd;
+	char buf[MAX_BUF];
+	char ch;
+
+	snprintf(buf, sizeof(buf), SYSFS_GPIO_DIR "/gpio%d/value", gpio);
+
+	fd = open(buf, O_RDONLY);
+	if (fd < 0) {
+		LOGE("gpio/get-value error = %d: path = %s", fd, buf );
+		return fd;
+	}
+
+	read(fd, &ch, 1);
+
+	if (ch != '0') {
+		*value = 1;
+	} else {
+		*value = 0;
+	}
+
+	close(fd);
+	return 0;
+}
+
+
+/****************************************************************
+ * gpio_set_edge
+ ****************************************************************/
+
+static int gpio_set_edge(unsigned int gpio, char *edge)
+{
+	int fd;
+	char buf[MAX_BUF];
+
+	snprintf(buf, sizeof(buf), SYSFS_GPIO_DIR "/gpio%d/edge", gpio);
+
+	fd = open(buf, O_WRONLY);
+	if (fd < 0) {
+		LOGE("gpio/set-edge error = %d: path = %s", fd, buf );
+		return fd;
+	}
+
+	write(fd, edge, strlen(edge) + 1);
+	close(fd);
+	return 0;
+}
+
+/****************************************************************
+ * gpio_fd_open
+ ****************************************************************/
+
+static int gpio_fd_open(unsigned int gpio)
+{
+	int fd;
+	char buf[MAX_BUF];
+
+	snprintf(buf, sizeof(buf), SYSFS_GPIO_DIR "/gpio%d/value", gpio);
+
+	fd = open(buf, O_RDONLY | O_NONBLOCK );
+	if (fd < 0) {
+		LOGE("gpio/fd_open error = %d: path = %s", fd, buf );
+	}
+	return fd;
+}
+
+/****************************************************************
+ * gpio_fd_close
+ ****************************************************************/
+
+static int gpio_fd_close(int fd)
+{
+	return close(fd);
+}
+
+unsigned int RESET_GPIO = 60;   // GPIO1_28 = (1x32) + 28 = 60
+
+JNIEXPORT void JNICALL Java_android_1serialport_1api_SerialPort_reset
+  ()
+{
+	LOGD("RESET");
+
+    gpio_export(RESET_GPIO);    // The LED
+    gpio_set_dir(RESET_GPIO, OUTPUT_PIN);   // The LED is an output
+
+    gpio_set_value(RESET_GPIO, LOW);
+	usleep(100000);      // sleep for 100 millisecond
+	gpio_set_value(RESET_GPIO, HIGH);
+
+	LOGD("!!!RESET FINISHED!!!");
 }
 

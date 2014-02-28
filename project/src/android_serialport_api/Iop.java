@@ -49,8 +49,9 @@ public class Iop extends SerialPortActivity{
 		IOP_BT_DOWNLOAD_BT_ADDR,		//1
 		IOP_BT_CLEAR_PAIRED_DEV_LIST,	//2
 		IOP_BT_BLE_STOP_ADVERTISING,	//3
-		IOP_BT_BLE_START_ADVERTISING,	//4
-		IOP_BT_GET_PAIRED_DEV_LIST,		//5
+		IOP_BT_BLE_DISCONNECT,			//4
+		IOP_BT_BLE_START_ADVERTISING,	//5
+		IOP_BT_GET_PAIRED_DEV_LIST,		//6
 		LAST
 	}
 
@@ -330,10 +331,10 @@ public class Iop extends SerialPortActivity{
 		Verify checksum
 		----------------------------------------------------------*/
 		//Adjust our calculated checksum to not account for bytes in message tail
-		iop_rx_msg_calc_chksm    -= iop_rx_buffer.get(iop_rx_buffer.size()-4).byteValue() +
-									iop_rx_buffer.get(iop_rx_buffer.size()-3).byteValue() +
-									iop_rx_buffer.get(iop_rx_buffer.size()-2).byteValue() +
-									iop_rx_buffer.get(iop_rx_buffer.size()-1).byteValue();
+		iop_rx_msg_calc_chksm    -= ( iop_rx_buffer.get(iop_rx_buffer.size()-4).byteValue() & 0xFF ) +
+									( iop_rx_buffer.get(iop_rx_buffer.size()-3).byteValue() & 0xFF ) +
+									( iop_rx_buffer.get(iop_rx_buffer.size()-2).byteValue() & 0xFF ) +
+									( iop_rx_buffer.get(iop_rx_buffer.size()-1).byteValue() & 0xFF );
 		int b1 = (iop_rx_buffer.get(iop_rx_buffer.size()-4).byteValue() & 0xff)<< 8;
 		int b2 = (iop_rx_buffer.get(iop_rx_buffer.size()-3).byteValue()) & 0xff;
 		tailCheckSum = b1 | b2;
@@ -347,7 +348,7 @@ public class Iop extends SerialPortActivity{
 	}
 
 	private static void copyByte(byte b) {
-		iop_rx_msg_calc_chksm += b;
+		iop_rx_msg_calc_chksm += ( b & 0xFF );
 		iop_rx_buffer.add(b);
 	}
 

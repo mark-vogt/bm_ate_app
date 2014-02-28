@@ -41,10 +41,10 @@ public class AteMain extends Activity implements View.OnClickListener{
 	public void onClick(View arg0) {
 		switch(arg0.getId()) {
 		case R.id.imageViewProgram:
-			startActivity(new Intent(this, IopActivity.class));
+			startActivity(new Intent(this, BlumooProgramTestActivity.class));
 			break;
 		case R.id.imageViewFinal:
-			//startActivity(new Intent(this, IopActivity.class));
+			startActivity(new Intent(this, BlumooFinalTestActivity.class));
 			break;
 		case R.id.imageViewSettings:
 			startActivity(new Intent(this, MainMenu.class));

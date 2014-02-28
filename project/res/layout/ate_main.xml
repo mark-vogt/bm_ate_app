@@ -5,7 +5,7 @@
     android:layout_height="fill_parent"
     android:background="#00ADEF"
     android:columnCount="7"
-    android:orientation="horizontal"
+    android:orientation="vertical"
     android:padding="50dp" >
 
     <ImageView
