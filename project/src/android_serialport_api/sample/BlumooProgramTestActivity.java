@@ -16,6 +16,8 @@ import android.os.Message;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -65,6 +67,12 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		 //Remove title bar
+	    this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+
+	    //Remove notification bar
+	    this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
 		setContentView(R.layout.blumoo_program_test);
 		input = getResources().openRawResource(R.raw.combined_sw_bl_106_app_109);
 		program_status_counter = 0;
@@ -238,7 +246,7 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 				mReception.setTextColor(Color.WHITE);
 				mReception.setBackgroundColor(Color.TRANSPARENT);
 				mReception.setText("Started...");	//Reset status window
-				mReception.setTextSize(25);
+				//mReception.setTextSize(25);
 				program_status_counter = 0;
 				ate_running = true;
 				dut_communication = false;
@@ -251,7 +259,7 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 			}	
 			break;
 		case ATE_STATE_MAC:	
-			mReception.setText("Programming Compete!");
+			mReception.setText("编程完成 Programming Compete");
 			try {
 			    Thread.sleep(2000);
 			} catch(InterruptedException ex) {
@@ -268,7 +276,7 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 //			my_bt_mac = bt_address;
 			System.arraycopy( bt_address, 0, my_bt_mac, 0, bt_address.length );
 			
-			mReception.append("\n设置MAC地址  Setting MAC");
+			mReception.append("\n设置蓝牙地址  Setting MAC");
 			ate_timer = new Timer();
 			ate_timer.schedule(new TimeoutTask(), DEFAULT_TIMEOUT);
 			Iop.sendInst(Iop.IOP_INST_ID.IOP_BT_ADDR_DATA, bt_address, 8);
@@ -319,7 +327,7 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 			*/
 			mac_cmd_id[0] = (byte) 1;
 			mac_cmd_id[1] = (byte) 0;
-			mReception.append("\nVerifying MAC");
+			mReception.append("\n验证蓝牙地址 Verifying MAC");
 			ate_timer = new Timer();
 			ate_timer.schedule(new TimeoutTask(), DEFAULT_TIMEOUT);
 			Iop.sendInst(Iop.IOP_INST_ID.IOP_CMND_ID, mac_cmd_id, 2);
@@ -340,7 +348,7 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 			*/
 			esn_cmd_id[0] = (byte) 0;
 			esn_cmd_id[1] = (byte) 0;
-			mReception.append("\nVerifying ESN");
+			mReception.append("\n验证 编号 Verifying ESN");
 			ate_timer = new Timer();
 			ate_timer.schedule(new TimeoutTask(), DEFAULT_TIMEOUT);
 			Iop.sendInst(Iop.IOP_INST_ID.IOP_CMND_ID, esn_cmd_id, 2);
@@ -355,7 +363,7 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 			}
 			
 			dut_communication = false;
-			mReception.append("\nPerforming Audio Test");
+			mReception.append("\n音频测试  Audio Test");
 			
 			ate_timer = new Timer();
 			ate_timer.schedule(new TimeoutTask(), DEFAULT_TIMEOUT);
@@ -370,7 +378,7 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 			
 		case ATE_STATE_LED_IR:
 			dut_communication = false;
-			mReception.append("\nPerforming IR LED Test");
+			mReception.append("\n红外线LED灯 IR LED Test");
 			
 			ate_timer = new Timer();
 			ate_timer.schedule(new TimeoutTask(), DEFAULT_TIMEOUT);
@@ -400,7 +408,7 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 			
 		case ATE_STATE_BLUETOOTH:
 			dut_communication = false;
-			mReception.append("\nPerforming Bluetooth Test");
+			mReception.append("\n蓝牙测试  Bluetooth Test");
 			
 			ate_timer = new Timer();
 			ate_timer.schedule(new TimeoutTask(), BT_TEST_TIMEOUT);
