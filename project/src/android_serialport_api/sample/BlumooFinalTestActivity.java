@@ -16,6 +16,8 @@ import android.os.Message;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -57,6 +59,12 @@ public class BlumooFinalTestActivity extends SerialPortActivity implements IopCa
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		 //Remove title bar
+	    this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+
+	    //Remove notification bar
+	    this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
 		setContentView(R.layout.blumoo_final_test);
 		
 		my_esn = 0;
@@ -188,7 +196,7 @@ public class BlumooFinalTestActivity extends SerialPortActivity implements IopCa
 			break;
 
 		case ATE_STATE_AUDIO:		
-			mReception.append("\nPerforming FT Audio Test");
+			mReception.append("\n音频测试 FT Audio Test");
 			
 			try {
 			    Thread.sleep(1000);
@@ -209,7 +217,7 @@ public class BlumooFinalTestActivity extends SerialPortActivity implements IopCa
 					
 		case ATE_STATE_FT_IR:
 			dut_communication = false;
-			mReception.append("\nPerforming FT IR LED Test");
+			mReception.append("\n红外线LED灯 FT IR LED Test");
 					
 			ate_timer = new Timer();
 			ate_timer.schedule(new TimeoutTask(), DEFAULT_TIMEOUT);
@@ -225,7 +233,7 @@ public class BlumooFinalTestActivity extends SerialPortActivity implements IopCa
 		case ATE_STATE_BLUETOOTH:		
 			mReception.setTextColor(Color.WHITE);
 			mReception.setBackgroundColor(Color.TRANSPARENT);
-			mReception.setText("Creating BLE connection...");	//Reset status window
+			mReception.setText("蓝牙连接 Creating BLE connection...");	//Reset status window
 			mReception.setTextSize(25);
 			ate_running = true;			
 			dut_communication = false;
