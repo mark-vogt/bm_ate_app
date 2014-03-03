@@ -45,7 +45,7 @@ public class BlumooFinalTestActivity extends SerialPortActivity implements IopCa
 	private static final int BT_TEST_TIMEOUT = 10000;	/* millseconds	*/
 	
 	//variables
-	private EditText edittext;
+	//private EditText edittext;
 	private boolean ate_running;
 	private boolean dut_communication;
 	private int my_esn;
@@ -82,20 +82,20 @@ public class BlumooFinalTestActivity extends SerialPortActivity implements IopCa
 			}
 		});	
 
-	    edittext = (EditText) findViewById(R.id.editTextBlumooAteSerial);
-	    edittext.setSelectAllOnFocus(true);
-
-        edittext.setOnKeyListener(new EditText.OnKeyListener() {
-        public boolean onKey(View v, int keyCode, KeyEvent event) {
-        		Log.v("Mark",edittext.getText().toString());
-        		if (keyCode == KeyEvent.KEYCODE_ENTER) {
-        			if( edittext.getText().length() >= 1 ) {        				
-        				ate_start();
-        			}
-        		}
-                return false;
-            }
-        });
+//	    edittext = (EditText) findViewById(R.id.editTextBlumooAteSerial);
+//	    edittext.setSelectAllOnFocus(true);
+//
+//        edittext.setOnKeyListener(new EditText.OnKeyListener() {
+//        public boolean onKey(View v, int keyCode, KeyEvent event) {
+//        		Log.v("Mark",edittext.getText().toString());
+//        		if (keyCode == KeyEvent.KEYCODE_ENTER) {
+//        			if( edittext.getText().length() >= 1 ) {        				
+//        				ate_start();
+//        			}
+//        		}
+//                return false;
+//            }
+//        });
 	}
 
 	@Override
@@ -166,8 +166,8 @@ public class BlumooFinalTestActivity extends SerialPortActivity implements IopCa
 			mReception.setBackgroundColor(Color.RED);					
 		}
 		my_ate_state = ATE_STATE.ATE_STATE_IDLE;
-		edittext.selectAll();
-		edittext.requestFocus();
+		//edittext.selectAll();
+		//edittext.requestFocus();
 		
 		this.reset_ate();
 		try {
@@ -276,11 +276,11 @@ public class BlumooFinalTestActivity extends SerialPortActivity implements IopCa
 	private void ate_start() {
 		if(ate_running != true)
 		{
-			if( edittext.getText().length() >= 1)
-			{
-			my_esn = Integer.parseInt(edittext.getText().toString());	
+//			if( edittext.getText().length() >= 1)
+//			{
+//			my_esn = Integer.parseInt(edittext.getText().toString());	
 			ate_state_machine();
-			}
+//			}
 		}
 	}
 
