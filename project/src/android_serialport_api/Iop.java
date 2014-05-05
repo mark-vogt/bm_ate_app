@@ -158,7 +158,7 @@ public class Iop extends SerialPortActivity{
 		}
 		
 		for(int i=iop_dma_hdr_size; i<msg.length; i++) { //calc checksum
-			checksum += msg[i];
+			checksum += (int)(msg[i] & 0xFF);
 		}
 		
 		msg[msg_size - 4] = (byte) ((checksum & 0xFF00) >> 8);
