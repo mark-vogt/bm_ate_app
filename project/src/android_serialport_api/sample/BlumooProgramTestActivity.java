@@ -1,4 +1,4 @@
-package android_serialport_api.sample;
+﻿package android_serialport_api.sample;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -74,7 +74,7 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 	    this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
 		setContentView(R.layout.blumoo_program_test);
-		input = getResources().openRawResource(R.raw.combined_sw_bl_106_app_112p);
+		input = getResources().openRawResource(R.raw.combined_sw_bl_106_app_1_0_00);
 		program_status_counter = 0;
 		my_esn = 0;
 		ate_running = false;
