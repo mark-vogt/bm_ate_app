@@ -34,14 +34,16 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 		ATE_STATE_PROGRAM,
 		ATE_STATE_MAC,
 		ATE_STATE_ESN,
-		ATE_STATE_ESN_REBOOT,
+		ATE_STATE_RAM_TEST,
+		//ATE_STATE_ESN_REBOOT,
 		ATE_STATE_VERIFY_MAC,
 		ATE_STATE_VERIFY_ESN,
+		ATE_STATE_IR_LEARNING,
 		ATE_STATE_AUDIO,
 		ATE_STATE_LED_IR,
 		
 		ATE_STATE_BLUETOOTH,
-
+	
 		ATE_STATE_LED_RGB,
 		ATE_STATE_FT_IR,		/* Final test for IR exteneded	*/
 	}
@@ -74,7 +76,7 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 	    this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
 		setContentView(R.layout.blumoo_program_test);
-		input = getResources().openRawResource(R.raw.combined_sw_bl_106_app_1_1_00);
+		input = getResources().openRawResource(R.raw.combined_sw_bl_106_app_1_2_00);
 		program_status_counter = 0;
 		my_esn = 0;
 		ate_running = false;
@@ -294,13 +296,14 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 			esn_bytes[1] = (byte) (my_esn >> 8);
 			esn_bytes[2] = (byte) (my_esn >> 16);
 			esn_bytes[3] = (byte) (my_esn >> 24);
-			mReception.append("\n编号  ESN = ");
+			mReception.append(", 编号  ESN = ");
 			mReception.append(Integer.toString(my_esn));
 			ate_timer = new Timer();
 			ate_timer.schedule(new TimeoutTask(), DEFAULT_TIMEOUT);
 			Iop.sendInst(Iop.IOP_INST_ID.IOP_ESN_DATA, esn_bytes, 4);
 			break;
 			
+		/*
 		case ATE_STATE_ESN_REBOOT:
 			mReception.append("\n重启  Reboot");
 			try {
@@ -311,7 +314,7 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 				e.printStackTrace();
 			}	
 			break;
-			
+		*/
 		case ATE_STATE_VERIFY_MAC:
 			try {
 			    Thread.sleep(2000);
@@ -348,7 +351,7 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 			*/
 			esn_cmd_id[0] = (byte) 0;
 			esn_cmd_id[1] = (byte) 0;
-			mReception.append("\n验证 编号 Verifying ESN");
+			mReception.append(", 验证 编号 & ESN");
 			ate_timer = new Timer();
 			ate_timer.schedule(new TimeoutTask(), DEFAULT_TIMEOUT);
 			Iop.sendInst(Iop.IOP_INST_ID.IOP_CMND_ID, esn_cmd_id, 2);
@@ -420,6 +423,35 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 				e.printStackTrace();
 			}	
 			break;
+			
+		case ATE_STATE_IR_LEARNING:
+			dut_communication = true;
+			
+			mReception.append("\n红外学习测试 IR Learning Test");
+
+			byte[] dummy_byte = new byte[1];
+			dummy_byte[0] = (byte) 0;
+			
+			ate_timer = new Timer();
+			ate_timer.schedule(new TimeoutTask(), DEFAULT_TIMEOUT);
+			
+			Iop.sendInst(Iop.IOP_INST_ID.IOP_IR_LEARNING_TEST, dummy_byte, 0);
+			break;
+			
+		case ATE_STATE_RAM_TEST:
+			dut_communication = true;
+			
+			mReception.append("\n内存测试 RAM Test");
+			
+			byte[] test_id = new byte[1];
+			test_id[0] = (byte) 0;
+			
+			ate_timer = new Timer();
+			ate_timer.schedule(new TimeoutTask(), DEFAULT_TIMEOUT);
+			
+			Iop.sendInst(Iop.IOP_INST_ID.IOP_MEM_TEST_START, test_id, 0);
+			break;
+			
 		default:
 			my_ate_state = ATE_STATE.ATE_STATE_IDLE;
 			break;	
@@ -456,6 +488,8 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 		byte[] product_data = {66, 108, 117, 109, 111, 111, 32, 65, 84, 69, 32, 118, 48, 46, 49};//"Blumoo ATE tester v0.1";
 		int i;
 		
+        Log.v("IOPMSGHNDLR", String.valueOf(inst) );
+		
 		if(inst == Iop.IOP_INST_ID.PROD_RQST.ordinal()) 
 		{
 			mReception.append("\tProduct Request\n");
@@ -474,6 +508,7 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 				if( data[i] != my_bt_mac[i] )
 				{
 					ate_state_machine_reset(false);
+					return;
 				}
 			}
 			ate_state_machine();
@@ -486,8 +521,36 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 			{
 				ate_state_machine_reset(false);				
 			}
+			else
+			{
+				ate_state_machine();
+			}
+		}
+		else if(inst == Iop.IOP_INST_ID.IOP_MEM_TEST_RESP.ordinal() )
+		{
+			int	result = ((data[3] & 0xff) << 24) | ((data[2] & 0xff) << 16) | ((data[1] & 0xff) << 8)  | (data[0] & 0xff);
 			
-			ate_state_machine();
+			if( result != 0 )
+			{
+				ate_state_machine_reset(false);	
+			}
+			else
+			{
+				ate_state_machine();
+			}
+		}
+		else if(inst == Iop.IOP_INST_ID.IOP_IR_LEARNING_TEST_RSLT.ordinal() )
+		{
+			int result = (data[0] & 0xff);
+			
+			if( result == 0 )
+			{
+				ate_state_machine_reset(false);
+			}
+			else
+			{
+				ate_state_machine();
+			}
 		}
 		
 	}
@@ -501,8 +564,10 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 		case ATE_STATE_LED_IR:
 		case ATE_STATE_AUDIO:
 		case ATE_STATE_BLUETOOTH:
-		case ATE_STATE_ESN_REBOOT:
+		//case ATE_STATE_ESN_REBOOT:
 		case ATE_STATE_LED_RGB:
+		case ATE_STATE_IR_LEARNING:
+		case ATE_STATE_RAM_TEST:
 		default:
 			//ignore
 			break;

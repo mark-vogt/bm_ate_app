@@ -76,6 +76,7 @@ public class Iop extends SerialPortActivity{
 		IOP_UNUSED_17,
 		IOP_UNUSED_18,
 		IOP_UNUSED_19,
+		
 		/*----------------------------------------------
 		Bluetooth IOP instrument IDs
 		----------------------------------------------*/
@@ -95,6 +96,30 @@ public class Iop extends SerialPortActivity{
 		Audio IOP instrument IDs
 		----------------------------------------------*/
 		IOP_PLAY_TONE,				//31
+		
+		/*----------------------------------------------
+		Memory Test IDs
+		----------------------------------------------*/
+		IOP_MEM_TEST_START, 		//32
+		IOP_MEM_TEST_STATUS, 		//33
+		IOP_MEM_TEST_RESP, 			//34
+		
+		/*----------------------------------------------
+		IR Learning instrument IDs
+		----------------------------------------------*/
+		IOP_IR_LEARNING_CTRL, 		//35
+		IOP_IR_LEARNING_STATUS, 	//36
+		IOP_IR_LEARNING_DATA, 		//37
+		IOP_IR_LEARNING_TEST, 		//38
+		IOP_IR_LEARNING_TEST_RSLT, 	//39
+		
+		/*----------------------------------------------
+		New IR Code data format
+		----------------------------------------------*/
+		IOP_IR_CODE2_DATA, 			//40
+
+		IOP_UNIQUE_ID_DATA, 		//41
+		IOP_UNIQUE_ID_DATA_RESP,	//42
 		
 		LAST //Must be last
 	}
