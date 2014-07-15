@@ -154,7 +154,16 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 						}
 						break;
 					case '0':
-						ate_state_machine_reset(false);
+						switch(buffer[1]) {
+						case 'i':
+							mReception.append(" --- FAILED");
+							ate_state_machine();
+							break;
+						default: 
+							ate_state_machine_reset(false);
+							break;
+						}
+						
 						break;
 					case '1':
 						switch(buffer[1]) {
@@ -174,6 +183,7 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 								break;
 								
 							case 'i':
+								mReception.append(" PASSED");
 								ate_state_machine();
 								break;
 								
@@ -462,6 +472,7 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 		byte[] product_data = {66, 108, 117, 109, 111, 111, 32, 65, 84, 69, 32, 118, 48, 46, 49};//"Blumoo ATE tester v0.1";
 		int i;
 		
+		
 		if(inst == Iop.IOP_INST_ID.PROD_RQST.ordinal()) 
 		{
 			mReception.append("\tProduct Request\n");
@@ -475,6 +486,12 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 		}
 		else if(inst == Iop.IOP_INST_ID.IOP_BT_ADDR_DATA.ordinal())
 		{	boolean bt_mac_fail = false;	
+			String mac_string = " --- ";
+			
+			for(int j=0; j<8; j++) {
+				mac_string += String.format("%02x", (int)data[7-j]&0xFF);
+			}
+			
 			for( i = 0; i < my_bt_mac.length; i++ )
 			{
 				if( data[i] != my_bt_mac[i] )
@@ -483,7 +500,11 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 					break;
 				}
 			}
+			
+			mReception.append(mac_string);
+			
 			if( bt_mac_fail == true ) {
+				
 				ate_state_machine_reset(false);
 			}
 			else {
@@ -494,7 +515,13 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 		}
 		else if(inst == Iop.IOP_INST_ID.IOP_ESN_DATA.ordinal() )
 		{
+			String esn_string = " --- ";	
 			int	esn = ((data[3] & 0xff) << 24) | ((data[2] & 0xff) << 16) | ((data[1] & 0xff) << 8)  | (data[0] & 0xff);
+			
+			for(int j=0; j<4; j++) {
+				esn_string += String.format("%02x", (int)data[3-j]&0xFF);
+			}
+			mReception.append(esn_string);
 			
 			if( esn != my_esn )
 			{
