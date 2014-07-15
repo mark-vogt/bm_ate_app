@@ -299,7 +299,7 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 			break;
 		case ATE_STATE_ESN:
 			try {
-			    Thread.sleep(500);
+			    Thread.sleep(1000);
 			} catch(InterruptedException ex) {
 			    Thread.currentThread().interrupt();
 			}
@@ -318,6 +318,11 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 			break;
 			
 		case ATE_STATE_ESN_REBOOT:
+			try {
+			    Thread.sleep(1000);
+			} catch(InterruptedException ex) {
+			    Thread.currentThread().interrupt();
+			}
 			mReception.append("\n重启  Reboot");
 			try {
 				dut_communication = false;
