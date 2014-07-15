@@ -74,7 +74,7 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 	    this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
 		setContentView(R.layout.blumoo_program_test);
-		input = getResources().openRawResource(R.raw.combined_sw_bl_106_app_1_1_00);
+		input = getResources().openRawResource(R.raw.combined_sw_bl_106_app_1_2_00);
 		program_status_counter = 0;
 		my_esn = 0;
 		ate_running = false;
@@ -91,6 +91,8 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 			}
 		});	
 
+	    this.reset_ate();
+	    
 	    edittext = (EditText) findViewById(R.id.editTextBlumooAteSerial);
 	    edittext.setSelectAllOnFocus(true);
 
@@ -196,6 +198,10 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 	}
 
 	private void ate_state_machine_reset(boolean pass_fail) {
+		if(ate_timer != null) {				
+			ate_timer.cancel();
+		}
+		
 		if(pass_fail == true) {
 			mReception.append("\n成功  SUCCESS!");
 			mReception.setTextColor(Color.BLACK);
@@ -468,15 +474,23 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 			mReception.append("\n");
 		}
 		else if(inst == Iop.IOP_INST_ID.IOP_BT_ADDR_DATA.ordinal())
-		{		
+		{	boolean bt_mac_fail = false;	
 			for( i = 0; i < my_bt_mac.length; i++ )
 			{
 				if( data[i] != my_bt_mac[i] )
 				{
-					ate_state_machine_reset(false);
+					bt_mac_fail = true;
+					break;
 				}
 			}
-			ate_state_machine();
+			if( bt_mac_fail == true ) {
+				ate_state_machine_reset(false);
+			}
+			else {
+				ate_state_machine();
+			}
+			
+			
 		}
 		else if(inst == Iop.IOP_INST_ID.IOP_ESN_DATA.ordinal() )
 		{
@@ -486,8 +500,10 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 			{
 				ate_state_machine_reset(false);				
 			}
+			else {
+				ate_state_machine();
+			}			
 			
-			ate_state_machine();
 		}
 		
 	}
