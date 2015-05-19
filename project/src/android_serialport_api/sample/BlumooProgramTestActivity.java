@@ -32,6 +32,7 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 	public enum ATE_STATE {
 		ATE_STATE_IDLE,
 		ATE_STATE_PROGRAM,
+		ATE_STATE_VERIFY,
 		ATE_STATE_MAC,
 		ATE_STATE_ESN,
 		ATE_STATE_ESN_REBOOT,
@@ -61,7 +62,7 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 	private ATE_STATE my_ate_state;
 	private Timer ate_timer;
 	private Iop myIop;
-	
+	private int file_checksum;
 	EditText mReception;
 
 	@Override
@@ -80,6 +81,9 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 		ate_running = false;
 		dut_communication = false;
 		my_ate_state = ATE_STATE.ATE_STATE_IDLE;
+		
+		file_checksum = 0;
+		
 		myIop = new Iop(this);
 				
 		mReception = (EditText) findViewById(R.id.editTextBlumooAteStatus);
@@ -138,7 +142,15 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 						byte[] file_buffer = new byte[1024];									
 						
 						try {
-							input.read(file_buffer, 0, 1024);								
+							input.read(file_buffer, 0, 1024);
+
+							// Calculate 32-bit checksum of input file
+							for( int i = 0; i < 1024; i+= 4)
+							{
+								file_checksum += ( ( file_buffer[i+3] & 0xff ) << 24  | ( file_buffer[i+2] & 0xff ) << 16 | ( file_buffer[i+1] & 0xff ) << 8 | ( file_buffer[i] & 0xff ) );
+							}
+//					        System.out.println("File checksum for currently is is: " + file_checksum);
+										
 							mOutputStream.write(file_buffer);
 							program_status_counter ++;
 							mReception.setText(Integer.toString(program_status_counter*100/256) + "%  固件  Programming" );
@@ -153,6 +165,7 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 							e.printStackTrace();
 						}
 						break;
+						
 					case '0':
 						switch(buffer[1]) {
 						case 'i':
@@ -162,9 +175,9 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 						default: 
 							ate_state_machine_reset(false);
 							break;
-						}
-						
+						}						
 						break;
+						
 					case '1':
 						switch(buffer[1]) {
 							case 'p':
@@ -194,11 +207,17 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 							case 'b':
 								ate_state_machine();
 								break;
+
+							case 'v':
+								mReception.append(" PASSED");
+								ate_state_machine();
+								break;								
 								
 							default:
 								break;
 						};					
 						break;
+						
 					default:
 						break;
 					};
@@ -242,6 +261,8 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 			my_bt_mac[i] = 0;
 		}
 		
+		file_checksum = 0;
+		
 		Iop.reset();
 	}
 	
@@ -256,6 +277,7 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 		switch(my_ate_state) {
 		case ATE_STATE_IDLE:
 			break;
+			
 		case ATE_STATE_PROGRAM:
 			try {
 				input.reset(); 						//seek to beginning of file
@@ -274,8 +296,42 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 				e.printStackTrace();
 			}	
 			break;
-		case ATE_STATE_MAC:	
+			
+		case ATE_STATE_VERIFY:			
 			mReception.setText("编程完成 Programming Compete");
+			mReception.append("\n验证图片 Verifying Image");
+			try {
+			    Thread.sleep(2000);
+			} catch(InterruptedException ex) {
+			    Thread.currentThread().interrupt();
+			}
+			
+			try {
+				byte[] result = new byte[4];
+				
+				result[3] = (byte)((file_checksum & 0xFF000000) >> 24);
+				result[2] = (byte)((file_checksum & 0x00FF0000) >> 16);
+				result[1] = (byte)((file_checksum & 0x0000FF00) >> 8);
+				result[0] = (byte)((file_checksum & 0x000000FF) >> 0);
+
+				mOutputStream.write((byte)'v');		//v
+				
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				mOutputStream.write( result );
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			break;			
+			
+		case ATE_STATE_MAC:	
+			//mReception.setText("编程完成 Programming Compete");
 			try {
 			    Thread.sleep(2000);
 			} catch(InterruptedException ex) {
@@ -297,6 +353,7 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 			ate_timer.schedule(new TimeoutTask(), DEFAULT_TIMEOUT);
 			Iop.sendInst(Iop.IOP_INST_ID.IOP_BT_ADDR_DATA, bt_address, 8);
 			break;
+			
 		case ATE_STATE_ESN:
 			try {
 			    Thread.sleep(1000);
@@ -441,6 +498,7 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 				e.printStackTrace();
 			}	
 			break;
+			
 		default:
 			my_ate_state = ATE_STATE.ATE_STATE_IDLE;
 			break;	
