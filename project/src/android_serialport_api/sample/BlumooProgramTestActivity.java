@@ -31,6 +31,12 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 
 	public enum ATE_STATE {
 		ATE_STATE_IDLE,
+
+//		ATE_STATE_QUERY_FW_VERSION,
+//		ATE_STATE_K10_PRGM_START,
+//		ATE_STATE_K10_PRGM,
+//		ATE_STATE_K10_PRGM_DONE,
+
 		ATE_STATE_PROGRAM,
 		ATE_STATE_VERIFY,
 		ATE_STATE_MAC,
@@ -63,6 +69,9 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 	private Timer ate_timer;
 	private Iop myIop;
 	private int file_checksum;
+	
+	private int fw_status_counter;
+	
 	EditText mReception;
 
 	@Override
@@ -165,6 +174,66 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 							e.printStackTrace();
 						}
 						break;
+
+					case 'w':
+						byte[] fw_buffer = new byte[1024];									
+
+						for( int i = 0; i < fw_buffer.length; i++ )
+						{
+							fw_buffer[i] = (byte)( i % 256 );
+						}
+						
+						try {
+							//input.read(file_buffer, 0, 1024);								
+							if( input.read(fw_buffer, 0, fw_buffer.length) >= 0 )
+							{
+							mOutputStream.write(fw_buffer);
+							fw_status_counter ++;
+							mReception.setText(Integer.toString(fw_status_counter*100/140) + "%  固件  K10 FW Programming" );
+//							try {
+//								Thread.sleep(100);
+//							} catch (InterruptedException e) {
+//								// TODO Auto-generated catch block
+//								e.printStackTrace();
+//								}
+							}
+							else
+							{
+								//Reached EOF
+								ate_state_machine();
+							}							
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}						
+						break;
+						
+					case 'q':					
+//						String ver_string = "<<<<<<<<<<<<<<<<<<<<<<<<";	
+//						
+//						for(int i=0; i<size; i++) {
+//							ver_string += String.format("%02x", (int)buffer[i]);
+//						}
+//						Log.v("ATE",ver_string);
+						
+						byte[] desc_buffer = new byte[16];
+						
+						int	bld_ver = buffer[2] << 8 | buffer[1]; 
+						int	minor_ver = buffer[3];
+						int	major_ver = buffer[4];
+
+						for( int i = 0; i < desc_buffer.length; i++ )
+						{
+							desc_buffer[i] = buffer[i+5];
+						}
+						
+						mReception.append( "\nK10 FW version: " + Integer.toString(major_ver) + "." + Integer.toString(minor_ver) + "." + Integer.toString(bld_ver) );
+						mReception.append( "\nDescription: " + new String( desc_buffer ) );						
+						break;
+						
+					case 'v':
+						mReception.append( "\nVerify buffer received");						
+						break;
 						
 					case '0':
 						switch(buffer[1]) {
@@ -175,7 +244,8 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 						default: 
 							ate_state_machine_reset(false);
 							break;
-						}						
+						}
+						
 						break;
 						
 					case '1':
@@ -205,6 +275,10 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 								break;
 								
 							case 'b':
+								ate_state_machine();
+								break;
+
+							case 'q':
 								ate_state_machine();
 								break;
 
@@ -297,6 +371,48 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 			}	
 			break;
 			
+
+//		case ATE_STATE_QUERY_FW_VERSION:
+//			mReception.append("\nChecking K10 FW Version");
+//			
+//			try {		
+//				mOutputStream.write((byte)'q');		//q
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//			break;
+//			
+//		case ATE_STATE_K10_PRGM_START:
+//
+//			try {		
+//				mOutputStream.write((byte)'s');		//s
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//			break;
+//			
+//		case ATE_STATE_K10_PRGM:
+//			
+//			try {		
+//				mOutputStream.write((byte)'w');		//w
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//			break;
+//
+//		case ATE_STATE_K10_PRGM_DONE:
+//			
+//			try {		
+//				mOutputStream.write((byte)'z');		//z
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//			break;
+
 		case ATE_STATE_VERIFY:			
 			mReception.setText("编程完成 Programming Compete");
 			mReception.append("\n验证图片 Verifying Image");
@@ -609,6 +725,11 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 		case ATE_STATE_BLUETOOTH:
 		case ATE_STATE_ESN_REBOOT:
 		case ATE_STATE_LED_RGB:
+//		case ATE_STATE_QUERY_FW_VERSION:
+//		case ATE_STATE_K10_PRGM_START:
+//		case ATE_STATE_K10_PRGM:
+//		case ATE_STATE_K10_PRGM_DONE:
+		case ATE_STATE_VERIFY:
 		default:
 			//ignore
 			break;
