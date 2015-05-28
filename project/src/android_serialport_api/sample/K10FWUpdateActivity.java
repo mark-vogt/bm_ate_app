@@ -62,7 +62,7 @@ public class K10FWUpdateActivity extends SerialPortActivity implements IopCallba
 		super.onCreate(savedInstanceState);
 
 		setContentView(R.layout.k10_fw_update);
-		input = getResources().openRawResource(R.raw.ate_app_sw_1_0_00_crc);
+		input = getResources().openRawResource(R.raw.ate_app_sw_1_1_00_crc);
 		program_status_counter = 0;
 		program_offset = 0;
 		ate_running = false;
