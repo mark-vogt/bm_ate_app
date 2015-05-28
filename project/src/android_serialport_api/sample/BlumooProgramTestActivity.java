@@ -238,10 +238,10 @@ public class BlumooProgramTestActivity extends SerialPortActivity implements Iop
 						
 					case '0':
 						switch(buffer[1]) {
-						case 'i':
-							mReception.append(" --- FAILED");
-							ate_state_machine();
-							break;
+//						case 'i':
+//							mReception.append(" --- FAILED");
+//							ate_state_machine();
+//							break;
 						default: 
 							ate_state_machine_reset(false);
 							break;
