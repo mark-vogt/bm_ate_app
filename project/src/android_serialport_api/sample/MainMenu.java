@@ -72,6 +72,14 @@ public class MainMenu extends Activity {
 				startActivity(new Intent(MainMenu.this, IopActivity.class));
 			}
         });
+        
+        final Button buttonK10 = (Button)findViewById(R.id.ButtonK10);
+        buttonK10.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				startActivity(new Intent(MainMenu.this, K10FWUpdateActivity.class));
+			}
+        });
+        
 //        buttonQuit.setOnClickListener(new View.OnClickListener() {
 //			public void onClick(View v) {
 //				MainMenu.this.finish();

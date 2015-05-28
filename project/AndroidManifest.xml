@@ -19,6 +19,7 @@
         <activity android:name="LoopbackActivity" >
         </activity>
         <activity android:name="Sending01010101Activity"></activity>
+        <activity android:name="K10FWUpdateActivity"></activity>
         <activity android:name="IopActivity" >
         </activity>
         <activity android:name="BlumooProgramTestActivity"></activity>

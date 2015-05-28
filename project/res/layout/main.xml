@@ -12,41 +12,55 @@
         android:layout_width="fill_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:text="Setup" />
-
+        android:text="Setup"
+		android:textSize="10sp" />
+		
     <Button
         android:id="@+id/ButtonConsole"
         android:layout_width="fill_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:text="Console" />
-
+        android:text="Console"
+		android:textSize="10sp" />
+    
     <Button
         android:id="@+id/ButtonLoopback"
         android:layout_width="fill_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:text="Loopback" />
+        android:text="Loopback" 
+		android:textSize="10sp" />
 
     <Button
         android:id="@+id/Button01010101"
         android:layout_width="fill_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:text="Send 01010101" />
-
+        android:text="Send 01010101"
+		android:textSize="10sp" />
+    
     <Button
         android:id="@+id/ButtonAbout"
         android:layout_width="fill_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:text="Blumoo ATE" />
+        android:text="Blumoo ATE"
+		android:textSize="10sp" />
 
     <Button
         android:id="@+id/ButtonQuit"
         android:layout_width="fill_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:text="Blumoo Test" />
+        android:text="Blumoo Test"
+		android:textSize="10sp" />
+
+    <Button
+        android:id="@+id/ButtonK10"
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:text="K10 FW Update"
+		android:textSize="10sp" />
 
 </LinearLayout>
